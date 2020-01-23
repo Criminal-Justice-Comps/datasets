@@ -7,17 +7,17 @@ Used to randomly divide a dataset (in csv format) into:
 Directions for use:
     1: set LOAD_FILENAME, FILE_PATH to the proper file path
     2: set TRAIN_FILENAME, VALIDATE_FILENAME, and TEST_FILENAME to desired name
-    2: run `python split-cat-num.py`
+    2: run "python3 train-validate-test.py"
 
 """
 from random import randint
 
-LOAD_FILENAME = "NumericFeaturesData.csv" # load data from this file
+LOAD_FILENAME = "categoricalfeaturesdata.csv" # load data from this file
 FILE_PATH = "TrainValidateTest/" # location for the files you create
 
-TRAIN_FILENAME = "TrainNumericFeatures.csv"
-VALIDATE_FILENAME = "ValidateNumericFeatures.csv"
-TEST_FILENAME = "TestNumericFeatures.csv"
+TRAIN_FILENAME = "TrainCategoricalFeatures.csv"
+VALIDATE_FILENAME = "ValidateCategoricalFeatures.csv"
+TEST_FILENAME = "TestCategoricalFeatures.csv"
 
 
 def main():
@@ -25,7 +25,6 @@ def main():
         line = file.readline()
         headers = line.split(',')
         headers[-1] = headers[-1].rstrip('\n')
-
         train = [headers]
         validate = [headers]
         test = [headers]
