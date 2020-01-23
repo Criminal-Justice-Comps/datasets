@@ -12,12 +12,12 @@ Directions for use:
 """
 from random import randint
 
-LOAD_FILENAME = "categoricalfeaturesdata.csv" # load data from this file
+LOAD_FILENAME = "NumericFeaturesData.csv" # load data from this file
 FILE_PATH = "TrainValidateTest/" # location for the files you create
 
-TRAIN_FILENAME = "TrainCategoricalFeatures.csv"
-VALIDATE_FILENAME = "ValidateCategoricalFeatures.csv"
-TEST_FILENAME = "TestCategoricalFeatures.csv"
+TRAIN_FILENAME = "TrainNumericFeatures.csv"
+VALIDATE_FILENAME = "ValidateNumericFeatures.csv"
+TEST_FILENAME = "TestNumericFeatures.csv"
 
 
 def main():
