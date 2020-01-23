@@ -1,4 +1,7 @@
 
+Official train, validation, and test sets are in the TrainValidateTest/ folder
+
+Specifics about these files is as follows:
 - TestCategoricalFeatures.csv contains 9.995% of the categorical data
 - ValidateCategoricalFeatures.csv contains 10.207% of the categorical data
 - TrainCategoricalFeatures.csv contains 79.838% of the categorical data
