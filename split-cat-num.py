@@ -19,7 +19,7 @@ NumericFeaturesData.csv, or CleanedFeaturesData.csv
 
 NUMERIC = [3, 4, 5, 6, 7, 8] # all numeric features
 GROUND = [0, 11, 15] # features to include in all
-LOAD_FILENAME = "FeaturesData.csv" # load data from this file
+LOAD_FILENAME = "TrainValidateTest/ValidateFeatures.csv" # load data from this file
 IGNORE_QUOTED_COMMAS = True # ignore commas in quotation marks
 QUOTES_TO_IGNORE = [7264] # ignore quotes on this line w.r.t. commas
 
@@ -57,15 +57,15 @@ def main():
                 else:
                     cat_person.append(split_line[i])
 
-            if j == 0 or not(int(split_line[11]) == -1 or int(split_line[15]) == -1):
-                all_categorical.append(cat_person)
-                all_numeric.append(num_person)
-                all_data.append(person)
+            #if j == 0 or not(int(split_line[11]) == -1 or int(split_line[15]) == -1):
+            all_categorical.append(cat_person)
+            all_numeric.append(num_person)
+            all_data.append(person)
             j += 1
 
-    create_file('NumericFeaturesData.csv', all_numeric)
-    create_file('CategoricalFeaturesData.csv', all_categorical)
-    create_file('CleanedFeaturesData.csv', all_data)
+    create_file('TrainValidateTest/ValidateFeaturesNumeric.csv', all_numeric)
+    create_file('TrainValidateTest/ValidateFeaturesCategorical.csv', all_categorical)
+    #create_file('CleanedFeaturesData.csv', all_data)
 
 
 def create_filestring(data):
