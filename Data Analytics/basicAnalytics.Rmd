@@ -1,0 +1,50 @@
+---
+title: "Basic Data Analytics"
+author: "Cameron Kline-Sharpe"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse=TRUE, prompt=TRUE,comment=NULL,message=FALSE, include=TRUE, fig.height = 4, fig.width = 8)
+```
+
+```{r getPackages, include=FALSE}
+library(tidyverse)
+```
+
+# If you modify this code, please add your name to the top of the document, in the author section.
+
+```{r getData, include=FALSE}
+COMPAS <- read_csv("../CleanedFeaturesData.csv", 
+                   col_type = cols(person_id = col_integer(),
+                                   age = col_integer(),
+                                   juv_fel_count = col_integer(),
+                                   juv_misd_count = col_integer(),
+                                   juv_other_count = col_integer(),
+                                   decile_score = col_integer(),
+                                   priors_count = col_integer(),
+                                   num_r_cases = col_integer(),
+                                   num_vr_cases = col_integer(),
+                                   is_recid = col_logical(),
+                                   is_violent_recid = col_logical()))
+
+
+simple_COMPAS <- COMPAS %>% 
+  select(person_id, age, race, decile_score, is_recid, is_violent_recid)
+```
+
+```{r race, include = FALSE}
+
+recid_by_race <-  simple_COMPAS %>%
+  group_by(race) %>%
+  summarize(n=n(), prop_recid = mean(is_recid))
+
+recid_by_race
+
+
+ggplot(simple_COMPAS, aes(x=race, y=decile_score, color = race)) + 
+  geom_boxplot() + 
+  labs(title = "COMPAS Decile Score by Race", y="Decile Score", x="Race", color="Race") + 
+  stat_summary(fun.y = mean, geom="point", shape = 22)
+```
+
