@@ -33,7 +33,7 @@ simple_COMPAS <- COMPAS %>%
   select(person_id, age, race, decile_score, is_recid, is_violent_recid)
 ```
 
-```{r race, include = FALSE}
+```{r race, echo = FALSE}
 
 recid_by_race <-  simple_COMPAS %>%
   group_by(race) %>%
