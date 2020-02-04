@@ -8,6 +8,7 @@ output: github_document
 knitr::opts_chunk$set(collapse=TRUE, prompt=TRUE,comment=NULL,message=FALSE, include=TRUE, fig.height = 4, fig.width = 8)
 ```
 
+
 ```{r getPackages, include=FALSE}
 library(tidyverse)
 ```
@@ -33,18 +34,74 @@ simple_COMPAS <- COMPAS %>%
   select(person_id, age, race, decile_score, is_recid, is_violent_recid)
 ```
 
+
+```{r compasError, echo=FALSE}
+
+simple_COMPAS = simple_COMPAS %>%
+  mutate(recidDist = ifelse(is_recid, 10-decile_score, decile_score-1)) %>%
+  filter(recidDist >= 0)
+
+
+ggplot(simple_COMPAS, aes(x = recidDist)) + geom_histogram(bins=9, color="black")
+```
+
 ```{r race, echo = FALSE}
 
 recid_by_race <-  simple_COMPAS %>%
   group_by(race) %>%
   summarize(n=n(), prop_recid = mean(is_recid))
 
-recid_by_race
-
+ggplot(simple_COMPAS, aes(x=race, fill=is_recid)) + 
+  geom_bar() + 
+  labs(title = "Proportion of Recidivism by Race", x="Race", y="Number", fill="Recidivism")
 
 ggplot(simple_COMPAS, aes(x=race, y=decile_score, color = race)) + 
   geom_boxplot() + 
   labs(title = "COMPAS Decile Score by Race", y="Decile Score", x="Race", color="Race") + 
   stat_summary(fun.y = mean, geom="point", shape = 22)
+
+ggplot(simple_COMPAS, aes(x=race, color=race, y=recidDist)) + 
+  geom_boxplot() + 
+  labs(title="COMPAS Score Distance by Race", y="Distance") + 
+  stat_summary(fun.y = mean, geom="point", shape = 22)
+
 ```
+
+```{r age, echo=FALSE}
+by_age <- simple_COMPAS %>% 
+  group_by(age) %>%
+  summarise(numRecid=sum(is_recid), numViolent=sum(is_violent_recid), n=n()) %>%
+  gather(2:4, key = metric, value = n)
+
+ggplot(by_age, aes(x = age, y = n, color = metric)) + geom_path()
+
+
+
+
+ggplot(simple_COMPAS, aes(x=age, y=recidDist)) + 
+  geom_smooth() +
+  labs(title = "COMPAS Score Distance by Age", y = "COMPAS Score Distance")
+
+ggplot(simple_COMPAS, aes(x=age, y=recidDist, color=is_recid)) + 
+  geom_smooth() +
+  labs(title = "COMPAS Score Distance by Age and Recidivism", y = "COMPAS Score Distance")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
