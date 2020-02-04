@@ -15,6 +15,12 @@ library(tidyverse)
 
 # If you modify this code, please add your name to the top of the document, in the author section.
 
+## TODO:
+
+1. regroup asian, native american with Other for most things
+2. For the sake of comparison with our algorithms, focus on making confusion matrix-like graphs
+3. Colors often backwards--pick consistant colors; note also to provide colors with correct conotations (red==bad, blue==not)
+
 ```{r getData, include=FALSE}
 COMPAS <- read_csv("../CleanedFeaturesData.csv", 
                    col_type = cols(person_id = col_integer(),
@@ -28,22 +34,60 @@ COMPAS <- read_csv("../CleanedFeaturesData.csv",
                                    num_vr_cases = col_integer(),
                                    is_recid = col_logical(),
                                    is_violent_recid = col_logical()))
-
-
 simple_COMPAS <- COMPAS %>% 
-  select(person_id, age, race, decile_score, is_recid, is_violent_recid)
+  select(person_id, age, race, decile_score, is_recid, is_violent_recid) %>%
+  mutate(recidDist = ifelse(is_recid, 10-decile_score, decile_score-1),
+         predict5 = ifelse(decile_score > 5, TRUE, FALSE)) %>%
+  mutate(recid = ifelse(is_recid, "Did Recidivate", "Did Not Recidivate"),
+         predict5Corr = ifelse(predict5 == is_recid, "Correct", "Incorrect"))
+
+DT <- read_csv("DTPredictions.csv",
+               col_type = cols(prediction = col_logical(), truth = col_logical())) %>%
+      mutate(correct = ifelse(prediction == truth, "Correct", "Incorrect"),
+             truthChar = ifelse(truth, "Did Recidivate", "Did Not Recidivate"))
+
+DT_Violent <- read_csv("DTViolentPredictions.csv",
+               col_type = cols(prediction = col_logical(), truth = col_logical())) %>%
+      mutate(correct = ifelse(prediction == truth, "Correct", "Incorrect"),
+             truthChar = ifelse(truth, "Did Violently Recidivate", "Did Not Violently Recidivate"))
+    
 ```
 
 
 ```{r compasError, echo=FALSE}
 
-simple_COMPAS = simple_COMPAS %>%
-  mutate(recidDist = ifelse(is_recid, 10-decile_score, decile_score-1)) %>%
-  filter(recidDist >= 0)
+simple_COMPAS <- simple_COMPAS %>%
+  filter(recidDist >= 0) %>%
+  mutate(pred5Status = ifelse(predict5, 
+                              ifelse(is_recid, "True Positive", "False Positive"), 
+                              ifelse(is_recid, "False Negative", "True Negative")))
 
+# change colors around--try pie chart (maybe just of those who recidivism), split into three sections 
+ggplot(simple_COMPAS, aes(x = is_recid, fill=is_violent_recid)) + 
+  geom_bar() + 
+  labs(title = "Reicidivism in our Training Data", x="Did they Recidivate?", fill="Did they Violently Recidivate?")
 
-ggplot(simple_COMPAS, aes(x = recidDist)) + geom_histogram(bins=9, color="black")
+ggplot(simple_COMPAS) + 
+  geom_bar(mapping = aes(x = recidDist), fill="darkBlue") + 
+  labs(title="COMPAS Score Distances", x="COMPAS Score Distances")
+  
+ggplot(simple_COMPAS, aes(x = recidDist, fill=is_recid)) + geom_bar() +
+  facet_wrap(~is_recid) + 
+  labs(title="COMPAS Score Distances by Recidivism", x = "Score Distance", fill = "Recidivism")
+
+# change colors --two shades of red vs two shades of green
+ggplot(simple_COMPAS, aes(x = pred5Status, fill=pred5Status)) +
+  geom_bar() + 
+  theme(legend.position = "none") + 
+  labs(title = "Confusion Matrix as a Bar Graph", x="Prediction Status")
 ```
+
+### CONFUSION MATRIX
+  Confusion Matrix | Score > 5 | Score <= 5 |
+------------------ | --------- | ---------- |
+Did Recidivate     |   5333    | 1993       |
+Did not Recidivate |   1794    | 1909       |
+
 
 ```{r race, echo = FALSE}
 
@@ -64,7 +108,6 @@ ggplot(simple_COMPAS, aes(x=race, color=race, y=recidDist)) +
   geom_boxplot() + 
   labs(title="COMPAS Score Distance by Race", y="Distance") + 
   stat_summary(fun.y = mean, geom="point", shape = 22)
-
 ```
 
 ```{r age, echo=FALSE}
@@ -73,7 +116,9 @@ by_age <- simple_COMPAS %>%
   summarise(numRecid=sum(is_recid), numViolent=sum(is_violent_recid), n=n()) %>%
   gather(2:4, key = metric, value = n)
 
-ggplot(by_age, aes(x = age, y = n, color = metric)) + geom_path()
+ggplot(by_age, aes(x = age, y = n, color = metric)) + 
+  geom_path() + 
+  labs(title = "Number of People by Age", x = "Age", y="Count")
 
 
 
@@ -88,7 +133,29 @@ ggplot(simple_COMPAS, aes(x=age, y=recidDist, color=is_recid)) +
 ```
 
 
+```{r DT, echo=FALSE}
 
+
+simple_COMPAS %>%
+  mutate(recid = ifelse(is_recid, "Did Recidivate", "Did Not Recidivate"),
+         predict5Corr = ifelse(predict5 == is_recid, "Correct", "Incorrect")) %>%
+  ggplot( aes(x=recid, fill=predict5Corr)) + 
+    geom_bar() + 
+    scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
+    labs(title="COMPAS Confusion Matrix as a Bar Graph", fill="COMPAS Prediction")
+
+ggplot(DT, aes(x = truthChar, fill=correct)) + 
+  geom_bar() +
+  labs(title = "Decision Tree Confusion Matrix as Bar Graph", fill="DT Prediction") + 
+  scale_fill_manual(values = c("#1FBFC3", "#F57670")) 
+  
+ggplot(DT_Violent, aes(x = truthChar, fill=correct)) + 
+  geom_bar() +
+  labs(title = "Decision Tree Confusion Matrix for Violent Recidivism as a Bar Graph", fill="DT Prediction", x = "Ground Truth") + 
+  scale_fill_manual(values = c("#1FBFC3", "#F57670"))
+  
+
+```
 
 
 
