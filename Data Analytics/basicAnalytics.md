@@ -12,7 +12,7 @@ Cameron Kline-Sharpe
 3.  Colors often backwards–pick consistant colors; note also to provide
     colors with correct conotations (red==bad, blue==not)
 
-![](basicAnalytics_files/figure-gfm/compasError-1.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-2.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-3.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-4.png)<!-- -->
+![](basicAnalytics_files/figure-gfm/compasError-1.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-2.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-3.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-4.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-5.png)<!-- -->
 
 ### CONFUSION MATRIX
 
@@ -21,7 +21,7 @@ Cameron Kline-Sharpe
 | Did Recidivate     | 5333       | 1993        |
 | Did not Recidivate | 1794       | 1909        |
 
-![](basicAnalytics_files/figure-gfm/race-1.png)<!-- -->![](basicAnalytics_files/figure-gfm/race-2.png)<!-- -->![](basicAnalytics_files/figure-gfm/race-3.png)<!-- -->
+![](basicAnalytics_files/figure-gfm/race-1.png)<!-- -->![](basicAnalytics_files/figure-gfm/race-2.png)<!-- -->![](basicAnalytics_files/figure-gfm/race-3.png)<!-- -->![](basicAnalytics_files/figure-gfm/race-4.png)<!-- -->![](basicAnalytics_files/figure-gfm/race-5.png)<!-- -->![](basicAnalytics_files/figure-gfm/race-6.png)<!-- -->![](basicAnalytics_files/figure-gfm/race-7.png)<!-- -->
 
 ![](basicAnalytics_files/figure-gfm/age-1.png)<!-- -->![](basicAnalytics_files/figure-gfm/age-2.png)<!-- -->![](basicAnalytics_files/figure-gfm/age-3.png)<!-- -->
 
