@@ -5,7 +5,7 @@ output: github_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse=TRUE, prompt=TRUE,comment=NULL,message=FALSE, include=TRUE, fig.height = 4, fig.width = 8)
+knitr::opts_chunk$set(collapse=TRUE, prompt=TRUE,comment=NULL,message=FALSE, include=TRUE, fig.height = 5, fig.width = 9)
 ```
 
 
@@ -53,7 +53,10 @@ simple_COMPAS <- COMPAS %>%
 DT <- read_csv("DTPredictions.csv",
                col_type = cols(prediction = col_logical(), truth = col_logical())) %>%
       mutate(correct = ifelse(prediction == truth, "Correct", "Incorrect"),
-             truthChar = ifelse(truth, "Did Recidivate", "Did Not Recidivate"))
+             truthChar = ifelse(truth, "Did Recidivate", "Did Not Recidivate"),
+             confusion = ifelse(truth == 1,
+                                ifelse(prediction == 1, "TP", "FN"),
+                                ifelse(prediction == 0, "TN", "FP")))
 
 # read in the Decision tree data for violent recidivism
 DT_Violent <- read_csv("DTViolentPredictions.csv",
@@ -67,7 +70,17 @@ baseline <- read_csv("randomBaselinePredictions.csv",
       mutate(correct = ifelse(predicted == truth, "Correct", "Incorrect"),
              truthChar = ifelse(truth, "Did Recidivate", "Did Not Recidivate"))
 
+baseline_violent <- read_csv("randomBaselineResults.csv",
+                     col_type = cols(predicted = col_logical(), truth = col_logical())) %>%
+      mutate(correct = ifelse(predicted == truth, "Correct", "Incorrect"),
+             truthChar = ifelse(truth, "Did Recidivate", "Did Not Recidivate"))
+
 foolish <- read_csv("foolishConditionPredictions.csv",
+                     col_type = cols(predicted = col_logical(), truth = col_logical())) %>%
+      mutate(correct = ifelse(predicted == truth, "Correct", "Incorrect"),
+             truthChar = ifelse(truth, "Did Recidivate", "Did Not Recidivate"))
+
+foolish_violent <- read_csv("foolishConditionResults.csv",
                      col_type = cols(predicted = col_logical(), truth = col_logical())) %>%
       mutate(correct = ifelse(predicted == truth, "Correct", "Incorrect"),
              truthChar = ifelse(truth, "Did Recidivate", "Did Not Recidivate"))
@@ -196,6 +209,18 @@ ggplot(simple_COMPAS, aes(x=age, y=recidDist, color=recidStatus)) +
 
 ```{r Algos, echo=FALSE}
 
+# scale things to 1.0
+
+names <- c("Random")
+accs <- c(0.5)
+TPRs <- c(0.5)
+TNRs <- c(0.5)
+
+vnames <- c("Random")
+vaccs <- c(0.5)
+vTPRs <- c(0.5)
+vTNRs <- c(0.5)
+
 
 simple_COMPAS %>%
   mutate(recid = ifelse(is_recid, "Did Recidivate", "Did Not Recidivate"),
@@ -203,29 +228,137 @@ simple_COMPAS %>%
   ggplot( aes(x=recid, fill=predict5Corr)) + 
     geom_bar() + 
     scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
-    labs(title="COMPAS Confusion Matrix as a Bar Graph", fill="COMPAS Prediction")
+    labs(title="COMPAS Confusion Matrix", fill="COMPAS Prediction")
 
-ggplot(DT, aes(x = truthChar, fill=correct)) + 
-  geom_bar() +
-  labs(title = "Decision Tree Confusion Matrix as Bar Graph", fill="DT Prediction") + 
-  scale_fill_manual(values = c("#1FBFC3", "#F57670")) 
+
+accuracy <- function(data){
+  nrow(filter(data, correct == "Correct"))/nrow(data)
+}
+
+TPR <- function(data){
+  nrow(filter(data, correct == "Correct", truth == 1))/nrow(filter(data, truth == 1))
+}
+
+TNR <- function(data){
+  nrow(filter(data, correct == "Correct", truth == 0))/nrow(filter(data, truth == 0))
+}
+
+con_mat <- function(data){
+  data %>%
+    group_by(truthChar) %>%
+    mutate(num = n()) %>%
+    group_by(truthChar, correct, num) %>%
+    summarize(n = n()) %>%
+    mutate(prop = round(n/num,3))
+}
+
+plot_metrics <- function(names, acc, TPR, FPR){
+  met <- list(Model=names, acc=acc, TPR=TPR, FPR=FPR) %>%
+         as.data.frame() %>%
+         gather(acc, TPR, FPR, key=Metric, value=Proportion)
+  ggplot(met, aes(x=Model, y=Proportion, fill=Metric)) +
+    geom_bar(stat="identity", position="dodge",
+             color="black")
+}
+
+plot_metrics(names, accs, TPRs, TNRs)
+
+baseline %>%
+  con_mat() %>%
+  ggplot(aes(x = truthChar, y=n, fill=correct)) + 
+    geom_bar(stat="identity") +
+    labs(title = "Random Baseline for Recidivism",
+         fill="Prediction",
+         x = "Ground Truth",
+         y = "Count") + 
+    scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
+    geom_text(aes(label = prop, y=n), size = 6, position = position_stack(vjust = 0.5))
+
+              
+baseline_violent %>%
+  con_mat() %>%
+  ggplot(aes(x = truthChar, y=n, fill=correct)) + 
+    geom_bar(stat="identity") +
+    labs(title = "Random Baseline for Violent Recidivism",
+         fill="Prediction",
+         x = "Ground Truth",
+         y = "Count") + 
+    scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
+    geom_text(aes(label = prop, y=n), size = 4, position = position_stack(vjust = 0.5))
+
+
+foolish %>%
+  con_mat() %>%
+  ggplot(aes(x = truthChar, y=n, fill=correct)) + 
+    geom_bar(stat="identity") +
+    labs(title = "Foolish Prediction for Recidivism",
+         fill="Prediction",
+         x = "Ground Truth",
+         y = "Count") + 
+    scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
+    geom_text(aes(label = prop, y=n), size = 6, position = position_stack(vjust = 0.5))
+
+names <- append(names, "Foolish")
+accs <- append(accs, accuracy(foolish))
+TPRs <- append(TPRs, TPR(foolish))
+TNRs <- append(TNRs, TNR(foolish))
+plot_metrics(names, accs, TPRs, TNRs)
+
+foolish_violent %>%
+  con_mat() %>%
+  ggplot(aes(x = truthChar, y=n, fill=correct)) + 
+    geom_bar(stat="identity") +
+    labs(title = "Foolish Prediction for Violent Recidivism",
+         fill="Prediction",
+         x = "Ground Truth",
+         y = "Count") + 
+    scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
+    geom_text(aes(label = prop, y=n), size = 4, position = position_stack(vjust = 0.5))
+
+vnames <- append(vnames, "Foolish")
+vaccs <- append(vaccs, accuracy(foolish_violent))
+vTPRs <- append(vTPRs, TPR(foolish_violent))
+vTNRs <- append(vTNRs, TNR(foolish_violent))
+plot_metrics(vnames, vaccs, vTPRs, vTNRs)
+
+
+DT %>%
+  con_mat() %>%
+  ggplot(aes(x = truthChar, y=n, fill=correct)) + 
+    geom_bar(stat="identity") +
+    labs(title = "Decision Tree Prediction for Recidivism",
+         fill="Prediction",
+         x = "Ground Truth",
+         y = "Count") + 
+    scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
+    geom_text(aes(label = prop, y=ifelse(n < 500, 500, n)),
+              size = 6, position = position_stack(vjust = 0.5))
+
+names <- append(names, "DT")
+accs <- append(accs, accuracy(DT))
+TPRs <- append(TPRs, TPR(DT))
+TNRs <- append(TNRs, TNR(DT))
+plot_metrics(names, accs, TPRs, TNRs)
+
+
+DT_Violent %>%
+  con_mat() %>%
+  ggplot(aes(x = truthChar, y=n, fill=correct)) + 
+    geom_bar(stat="identity") +
+    labs(title = "Decision Prediction for Violent Recidivism",
+         fill="Prediction",
+         x = "Ground Truth",
+         y = "Count") + 
+    scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
+    geom_text(aes(label = prop, y=ifelse(n < 500, 500, n)),
+              size = 6, position = position_stack(vjust = 0.5))
+
+vnames <- append(vnames, "DT")
+vaccs <- append(vaccs, accuracy(DT_Violent))
+vTPRs <- append(vTPRs, TPR(DT_Violent))
+vTNRs <- append(vTNRs, TNR(DT_Violent))
+plot_metrics(vnames, vaccs, vTPRs, vTNRs)
   
-ggplot(DT_Violent, aes(x = truthChar, fill=correct)) + 
-  geom_bar() +
-  labs(title = "Decision Tree Confusion Matrix for Violent Recidivism as a Bar Graph", fill="DT Prediction", x = "Ground Truth") + 
-  scale_fill_manual(values = c("#1FBFC3", "#F57670"))
-
-ggplot(baseline, aes(x = truthChar, fill = correct)) + 
-  geom_bar() +
-  labs(title = "Random Baseline Confusion Matrix for Violent Recidivism as a Bar Graph", fill="DT Prediction", x = "Ground Truth") + 
-  scale_fill_manual(values = c("#1FBFC3", "#F57670"))
-
-ggplot(foolish, aes(x = truthChar, fill = correct)) +
-  geom_bar() +
-  labs(title = "Stereotypical Confusion Matrix for Violent Recidivism as a Bar Graph", fill="DT Prediction", x = "Ground Truth") + 
-  scale_fill_manual(values = c("#1FBFC3", "#F57670"))
-  
-
 ```
 
 

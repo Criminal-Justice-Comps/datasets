@@ -2,30 +2,30 @@ Basic Data Analytics
 ================
 Cameron Kline-Sharpe
 
-# If you modify this code, please add your name to the top of the document, in the author section.
+If you modify this code, please add your name to the top of the document, in the author section.
+================================================================================================
 
-## TODO:
+TODO:
+-----
 
 1.  regroup asian, native american with Other for most things
-2.  For the sake of comparison with our algorithms, focus on making
-    confusion matrix-like graphs
-3.  Colors often backwards–pick consistant colors; note also to provide
-    colors with correct conotations (red==bad, blue==not)
+2.  For the sake of comparison with our algorithms, focus on making confusion matrix-like graphs
+3.  Colors often backwards--pick consistant colors; note also to provide colors with correct conotations (red==bad, blue==not)
 
-![](basicAnalytics_files/figure-gfm/compasError-1.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-2.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-3.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-4.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-5.png)<!-- -->
+![](basicAnalytics_files/figure-markdown_github/compasError-1.png)![](basicAnalytics_files/figure-markdown_github/compasError-2.png)![](basicAnalytics_files/figure-markdown_github/compasError-3.png)![](basicAnalytics_files/figure-markdown_github/compasError-4.png)![](basicAnalytics_files/figure-markdown_github/compasError-5.png)
 
 ### CONFUSION MATRIX
 
-| Confusion Matrix   | Score \> 5 | Score \<= 5 |
-| ------------------ | ---------- | ----------- |
-| Did Recidivate     | 5333       | 1993        |
-| Did not Recidivate | 1794       | 1909        |
+| Confusion Matrix   | Score &gt; 5 | Score &lt;= 5 |
+|--------------------|--------------|---------------|
+| Did Recidivate     | 5333         | 1993          |
+| Did not Recidivate | 1794         | 1909          |
 
-![](basicAnalytics_files/figure-gfm/race-1.png)<!-- -->![](basicAnalytics_files/figure-gfm/race-2.png)<!-- -->![](basicAnalytics_files/figure-gfm/race-3.png)<!-- -->![](basicAnalytics_files/figure-gfm/race-4.png)<!-- -->![](basicAnalytics_files/figure-gfm/race-5.png)<!-- -->![](basicAnalytics_files/figure-gfm/race-6.png)<!-- -->![](basicAnalytics_files/figure-gfm/race-7.png)<!-- -->
+![](basicAnalytics_files/figure-markdown_github/race-1.png)![](basicAnalytics_files/figure-markdown_github/race-2.png)![](basicAnalytics_files/figure-markdown_github/race-3.png)![](basicAnalytics_files/figure-markdown_github/race-4.png)![](basicAnalytics_files/figure-markdown_github/race-5.png)![](basicAnalytics_files/figure-markdown_github/race-6.png)![](basicAnalytics_files/figure-markdown_github/race-7.png)
 
-![](basicAnalytics_files/figure-gfm/age-1.png)<!-- -->![](basicAnalytics_files/figure-gfm/age-2.png)<!-- -->![](basicAnalytics_files/figure-gfm/age-3.png)<!-- -->![](basicAnalytics_files/figure-gfm/age-4.png)<!-- -->
+![](basicAnalytics_files/figure-markdown_github/age-1.png)![](basicAnalytics_files/figure-markdown_github/age-2.png)![](basicAnalytics_files/figure-markdown_github/age-3.png)![](basicAnalytics_files/figure-markdown_github/age-4.png)
 
-![](basicAnalytics_files/figure-gfm/Algos-1.png)<!-- -->![](basicAnalytics_files/figure-gfm/Algos-2.png)<!-- -->![](basicAnalytics_files/figure-gfm/Algos-3.png)<!-- -->![](basicAnalytics_files/figure-gfm/Algos-4.png)<!-- -->![](basicAnalytics_files/figure-gfm/Algos-5.png)<!-- -->
+![](basicAnalytics_files/figure-markdown_github/Algos-1.png)![](basicAnalytics_files/figure-markdown_github/Algos-2.png)![](basicAnalytics_files/figure-markdown_github/Algos-3.png)![](basicAnalytics_files/figure-markdown_github/Algos-4.png)![](basicAnalytics_files/figure-markdown_github/Algos-5.png)![](basicAnalytics_files/figure-markdown_github/Algos-6.png)![](basicAnalytics_files/figure-markdown_github/Algos-7.png)![](basicAnalytics_files/figure-markdown_github/Algos-8.png)![](basicAnalytics_files/figure-markdown_github/Algos-9.png)![](basicAnalytics_files/figure-markdown_github/Algos-10.png)![](basicAnalytics_files/figure-markdown_github/Algos-11.png)![](basicAnalytics_files/figure-markdown_github/Algos-12.png)
 
 ``` r
 > 
