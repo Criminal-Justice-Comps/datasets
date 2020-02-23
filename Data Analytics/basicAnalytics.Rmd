@@ -261,7 +261,9 @@ plot_metrics <- function(names, acc, TPR, FPR){
              color="black")
 }
 
-plot_metrics(names, accs, TPRs, TNRs)
+plot_metrics(names, accs, TPRs, TNRs) +  
+  ylim(0,1)
+
 
 baseline %>%
   con_mat() %>%
@@ -302,12 +304,14 @@ names <- append(names, "Foolish")
 accs <- append(accs, accuracy(foolish))
 TPRs <- append(TPRs, TPR(foolish))
 TNRs <- append(TNRs, TNR(foolish))
-plot_metrics(names, accs, TPRs, TNRs)
+plot_metrics(names, accs, TPRs, TNRs) +  
+  ylim(0,1) 
 
 foolish_violent %>%
   con_mat() %>%
   ggplot(aes(x = truthChar, y=n, fill=correct)) + 
     geom_bar(stat="identity") +
+   
     labs(title = "Foolish Prediction for Violent Recidivism",
          fill="Prediction",
          x = "Ground Truth",
@@ -319,7 +323,8 @@ vnames <- append(vnames, "Foolish")
 vaccs <- append(vaccs, accuracy(foolish_violent))
 vTPRs <- append(vTPRs, TPR(foolish_violent))
 vTNRs <- append(vTNRs, TNR(foolish_violent))
-plot_metrics(vnames, vaccs, vTPRs, vTNRs)
+plot_metrics(vnames, vaccs, vTPRs, vTNRs) +  
+  ylim(0,1) 
 
 
 DT %>%
@@ -338,7 +343,8 @@ names <- append(names, "DT")
 accs <- append(accs, accuracy(DT))
 TPRs <- append(TPRs, TPR(DT))
 TNRs <- append(TNRs, TNR(DT))
-plot_metrics(names, accs, TPRs, TNRs)
+plot_metrics(names, accs, TPRs, TNRs) +  
+  ylim(0,1) 
 
 
 DT_Violent %>%
@@ -357,7 +363,8 @@ vnames <- append(vnames, "DT")
 vaccs <- append(vaccs, accuracy(DT_Violent))
 vTPRs <- append(vTPRs, TPR(DT_Violent))
 vTNRs <- append(vTNRs, TNR(DT_Violent))
-plot_metrics(vnames, vaccs, vTPRs, vTNRs)
+plot_metrics(vnames, vaccs, vTPRs, vTNRs) +  
+  ylim(0,1) 
   
 ```
 
