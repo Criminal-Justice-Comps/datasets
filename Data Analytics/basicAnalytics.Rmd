@@ -85,6 +85,11 @@ foolish_violent <- read_csv("foolishConditionResults.csv",
       mutate(correct = ifelse(predicted == truth, "Correct", "Incorrect"),
              truthChar = ifelse(truth, "Did Recidivate", "Did Not Recidivate"))
 
+ANN <- read_csv("ANNPred.csv",
+                     col_type = cols(predicted = col_logical(), truth = col_logical())) %>%
+      mutate(correct = ifelse(predicted == truth, "Correct", "Incorrect"),
+             truthChar = ifelse(truth, "Did Recidivate", "Did Not Recidivate"))
+
 green <- "#5BB84C"
 green2 <- "#4CB88F"
 blue <- "#1FBFC3" 
@@ -164,7 +169,7 @@ ggplot(simple_COMPAS, aes(x=race2, fill=recidStatus)) +
 
 ggplot(simple_COMPAS, aes(x=race2, y=decile_score, color = race2)) + 
   geom_boxplot() + 
-  labs(title = "COMPAS Decile Score by Race", y="Decile Score", x="Race (Grouped)", color="Race") + 
+  labs(title = "COMPAS Decile Score by Race", y="Decile Score", x="Race (Grouped)", color="Race") +
   stat_summary(fun.y = mean, geom="point", shape = 22)
 
 ggplot(simple_COMPAS, aes(x=race2, color=race2, y=recidDist)) + 
@@ -258,11 +263,11 @@ plot_metrics <- function(names, acc, TPR, FPR){
          gather(acc, TPR, FPR, key=Metric, value=Proportion)
   ggplot(met, aes(x=Model, y=Proportion, fill=Metric)) +
     geom_bar(stat="identity", position="dodge",
-             color="black")
+             color="black") +  
+    ylim(0,1)
 }
 
-plot_metrics(names, accs, TPRs, TNRs) +  
-  ylim(0,1)
+plot_metrics(names, accs, TPRs, TNRs) 
 
 
 baseline %>%
@@ -326,6 +331,25 @@ vTNRs <- append(vTNRs, TNR(foolish_violent))
 plot_metrics(vnames, vaccs, vTPRs, vTNRs) +  
   ylim(0,1) 
 
+NB <- simple_COMPAS %>%
+  mutate(truth = is_recid) %>%
+  select(truth) %>%
+  mutate(NB = "Did Not Recidivate",
+         truthChar= ifelse(truth == 1, "Did Recidivate", "Did Not Recidivate"),
+         correct = ifelse(truthChar == NB, "Correct", "Incorrect"))
+
+NB %>%
+  con_mat() %>%
+  ggplot(aes(x = truthChar, y=n, fill=correct)) + 
+    geom_bar(stat="identity") +
+    labs(title = "Naive Bayes Prediction for Recidivism",
+         fill="Prediction",
+         x = "Ground Truth",
+         y = "Count") + 
+    scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
+    geom_text(aes(label = prop, y=ifelse(n < 500, 500, n)),
+              size = 6, position = position_stack(vjust = 0.5))
+
 
 DT %>%
   con_mat() %>%
@@ -365,6 +389,18 @@ vTPRs <- append(vTPRs, TPR(DT_Violent))
 vTNRs <- append(vTNRs, TNR(DT_Violent))
 plot_metrics(vnames, vaccs, vTPRs, vTNRs) +  
   ylim(0,1) 
+
+ANN %>%
+  con_mat() %>%
+  ggplot(aes(x = truthChar, y=n, fill=correct)) + 
+    geom_bar(stat="identity") +
+    labs(title = "ANN Prediction for Recidivism",
+         fill="Prediction",
+         x = "Ground Truth",
+         y = "Count") + 
+    scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
+    geom_text(aes(label = prop, y=ifelse(n < 500, 500, n)),
+              size = 6, position = position_stack(vjust = 0.5))
   
 ```
 
