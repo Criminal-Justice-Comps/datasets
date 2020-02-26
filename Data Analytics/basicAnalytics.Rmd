@@ -212,7 +212,7 @@ ggplot(simple_COMPAS, aes(x=age, y=recidDist, color=recidStatus)) +
 ```
 
 
-```{r Algos, echo=FALSE}
+```{r baseline, echo=FALSE}
 
 # scale things to 1.0
 
@@ -220,11 +220,13 @@ names <- c("Random")
 accs <- c(0.5)
 TPRs <- c(0.5)
 TNRs <- c(0.5)
+FPRs <- c(0.5)
 
 vnames <- c("Random")
 vaccs <- c(0.5)
 vTPRs <- c(0.5)
 vTNRs <- c(0.5)
+
 
 
 simple_COMPAS %>%
@@ -248,6 +250,25 @@ TNR <- function(data){
   nrow(filter(data, correct == "Correct", truth == 0))/nrow(filter(data, truth == 0))
 }
 
+FPR <- function(data){
+  nrow(filter(data, truth == 0, correct == "Incorrect"))/nrow(filter(data, truth == 0))
+}
+
+get_fairness <- function(old, model, whiteFPR, blackFPR){
+  new <- list(Model = model, White = whiteFPR, Black = blackFPR) %>%
+    as.data.frame() %>%
+    gather(White, Black, key=Race, value = FPR)
+  data <- rbind(old, new)
+  data
+}
+
+plot_fairness <- function(data){
+  ggplot(data, aes(x=Model, y=FPR, fill = Race)) +
+    geom_bar(stat = "identity", color = "black", position="dodge") +
+    ylim(0,1)
+}
+
+
 con_mat <- function(data){
   data %>%
     group_by(truthChar) %>%
@@ -267,7 +288,17 @@ plot_metrics <- function(names, acc, TPR, FPR){
     ylim(0,1)
 }
 
-plot_metrics(names, accs, TPRs, TNRs) 
+plot_accs <- function(names, accs){
+  met <- list(Model = names, Accuracy = accs) %>%
+    as.data.frame() %>%
+    as.tbl()
+  ggplot(met, aes(x=Model, y=Accuracy, fill = Model)) +
+    geom_bar(stat="identity", color = "black") +
+    geom_text(aes(label = round(Accuracy, 3), y = Accuracy + 0.05),
+              alpha = 0.9, size = 6) +
+    ylim(0,1)
+}
+
 
 
 baseline %>%
@@ -294,6 +325,9 @@ baseline_violent %>%
     geom_text(aes(label = prop, y=n), size = 4, position = position_stack(vjust = 0.5))
 
 
+plot_accs(names, accs) + 
+  scale_fill_manual(values = c(green)) 
+
 foolish %>%
   con_mat() %>%
   ggplot(aes(x = truthChar, y=n, fill=correct)) + 
@@ -307,10 +341,10 @@ foolish %>%
 
 names <- append(names, "Foolish")
 accs <- append(accs, accuracy(foolish))
-TPRs <- append(TPRs, TPR(foolish))
-TNRs <- append(TNRs, TNR(foolish))
-plot_metrics(names, accs, TPRs, TNRs) +  
-  ylim(0,1) 
+FPRs <- append(FPRs, FPR(foolish))
+plot_accs(names, accs) + 
+  scale_fill_manual(values = c(green, blue)) 
+
 
 foolish_violent %>%
   con_mat() %>%
@@ -328,8 +362,13 @@ vnames <- append(vnames, "Foolish")
 vaccs <- append(vaccs, accuracy(foolish_violent))
 vTPRs <- append(vTPRs, TPR(foolish_violent))
 vTNRs <- append(vTNRs, TNR(foolish_violent))
-plot_metrics(vnames, vaccs, vTPRs, vTNRs) +  
-  ylim(0,1) 
+
+
+
+```
+
+
+```{r algorithms}
 
 NB <- simple_COMPAS %>%
   mutate(truth = is_recid) %>%
@@ -350,6 +389,12 @@ NB %>%
     geom_text(aes(label = prop, y=ifelse(n < 500, 500, n)),
               size = 6, position = position_stack(vjust = 0.5))
 
+names <- append(names, "NB")
+accs <- append(accs, accuracy(NB))
+FPRs <- append(FPRs, FPR(NB))
+plot_accs(names, accs) +
+  scale_fill_manual(values = c(blue, green, blue))
+
 
 DT %>%
   con_mat() %>%
@@ -365,10 +410,9 @@ DT %>%
 
 names <- append(names, "DT")
 accs <- append(accs, accuracy(DT))
-TPRs <- append(TPRs, TPR(DT))
-TNRs <- append(TNRs, TNR(DT))
-plot_metrics(names, accs, TPRs, TNRs) +  
-  ylim(0,1) 
+FPRs <- append(FPRs, FPR(DT))
+plot_accs(names, accs) +
+  scale_fill_manual(values = c(green, blue, blue, blue))
 
 
 DT_Violent %>%
@@ -387,8 +431,6 @@ vnames <- append(vnames, "DT")
 vaccs <- append(vaccs, accuracy(DT_Violent))
 vTPRs <- append(vTPRs, TPR(DT_Violent))
 vTNRs <- append(vTNRs, TNR(DT_Violent))
-plot_metrics(vnames, vaccs, vTPRs, vTNRs) +  
-  ylim(0,1) 
 
 ANN %>%
   con_mat() %>%
@@ -401,6 +443,21 @@ ANN %>%
     scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
     geom_text(aes(label = prop, y=ifelse(n < 500, 500, n)),
               size = 6, position = position_stack(vjust = 0.5))
+
+names <- append(names, "ANN")
+accs <- append(accs, accuracy(ANN))
+FPRs <- append(FPRs, FPR(ANN))
+plot_accs(names, accs) + 
+  scale_fill_manual(values = c(green, blue, blue, blue, blue))
+
+plot_accs(names, FPRs) +
+  labs(x = "False Positive Rate")
+
+Fairnesses <- list(Model = c("Random", "Random"),
+             Race = c("White", "Black"),
+             FPR = c(0.5, 0.5)) %>%
+  as.data.frame() %>%
+  as.tbl()
   
 ```
 

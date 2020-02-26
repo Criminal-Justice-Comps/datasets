@@ -1,0 +1,227 @@
+---
+title: "Basic Data Analytics"
+author: "Cameron Kline-Sharpe"
+output: github_document
+---
+
+# The best heat maps are at the very bottom
+
+TO CHANGE THE CLUSTERS THIS RUNS ON: Go to the `getClusters` code chunk (it's the third one down from the top), and change the file names inside the `read_csv()` functions.
+
+TO CHANGE THE WAY THE HEAT MAP WORKS: Go to the `graphClusters` code chunk (it's the second to last one), see the comments
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse=TRUE, prompt=TRUE,comment=NULL,message=FALSE, include=TRUE, fig.height = 5, fig.width = 9)
+```
+
+
+```{r getPackages, include=FALSE}
+library(tidyverse)
+library(purrr)
+```
+
+```{r getClusters}
+#                  Change the filenames below to read in different clusters
+cluster31 <- read_csv("AverageLinkTrainDataCluster3_1.csv") %>%
+    mutate(age_group = ifelse(age < 35, "age<35", ifelse(age < 60, "age<60", "60<age")),
+           clusterNum = "1")
+cluster32 <- read_csv("AverageLinkTrainDataCluster3_2.csv") %>%
+    mutate(age_group = ifelse(age < 35, "age<35", ifelse(age < 60, "age<60", "60<age")),
+           clusterNum = "2")
+cluster33 <- read_csv("AverageLinkTrainDataCluster3_3.csv") %>%
+    mutate(age_group = ifelse(age < 35, "age<35", ifelse(age < 60, "age<60", "60<age")),
+           clusterNum = "3")
+```
+
+```{r countRecid}
+get_recid_counts <- function(clusterNum) {
+  if (clusterNum == 1){
+    data <- cluster31
+  } else {
+    if (clusterNum == 2) {
+      data <- cluster32
+    } else {
+      data <- cluster33
+    }
+  }
+  data %>%
+    mutate(clusterNum = clusterNum) %>%
+    group_by(clusterNum, is_recid) %>%
+    summarise(n = n()) %>%
+    group_by(clusterNum) %>%
+    mutate(propRecid = n/sum(n))
+}
+nums <- seq(1, 3, by=1)
+numRecids <- map_df(nums, get_recid_counts) %>%
+  group_by(is_recid) %>%
+  mutate(propRecidDiff = round(propRecid-mean(propRecid), 4), propRecidDiffProp = round((propRecid-mean(propRecid))/propRecid,4))
+numRecids
+```
+
+
+```{r byRace}
+get_race_counts <- function(clusterNum) {
+  if (clusterNum == 1){
+    data <- cluster31
+  } else {
+    if (clusterNum == 2) {
+      data <- cluster32
+    } else {
+      data <- cluster33
+    }
+  }
+  data %>%
+    mutate(clusterNum = clusterNum) %>%
+    group_by(clusterNum, race) %>%
+    summarise(n = n()) %>%
+    group_by(clusterNum) %>%
+    mutate(propRace = n/sum(n))
+}
+
+numRace <- map_df(nums, get_race_counts) %>%
+  group_by(race) %>%
+  mutate(propRaceDiff = round(propRace-mean(propRace), 4), propRaceDiffProp = round((propRace-mean(propRace))/propRace,4))
+numRace
+```
+
+```{r byAge}
+get_age_counts <- function(clusterNum) {
+  if (clusterNum == 1){
+    data <- cluster31
+  } else {
+    if (clusterNum == 2) {
+      data <- cluster32
+    } else {
+      data <- cluster33
+    }
+  }
+  data %>% as.tbl() %>%
+    mutate(clusterNum = clusterNum) %>%
+    group_by(clusterNum, age_group) %>%
+    summarise(n = n()) %>%
+    group_by(clusterNum) %>%
+    mutate(propAge = n/sum(n))
+}
+
+
+numRace <- map_df(nums, get_age_counts) %>%
+  group_by(age_group) %>%
+  mutate(propAgeDiff = round(propAge-mean(propAge), 4), propAgeDiffProp = round((propAge-mean(propAge))/propAge,4))
+numRace 
+```
+
+```{r combineData}
+get_df <- function(data){
+  data %>%
+    as.data.frame()
+}
+
+get_numeric <- function(data, default){
+  min <- min(data)
+  max <- max(data)
+  range <- max-min
+  dist <- (data - data[[default]])/range
+}
+
+clusters <- list(cluster31, cluster32, cluster33)
+all_data <- map_df(clusters, get_df) %>% as.tbl()
+```
+
+
+```{r graphClusters}
+
+# TO CHANGE THE HEAT MAP:
+# 1) Pick different default people
+#       Go to the "SET DEFAULT section" and follow the instructions.
+# 2) Change the axis:
+#       More complicated. Send Cameron a slack message
+
+all_datax <- all_data
+all_datay <- all_data
+
+# SET DEFAULT:
+#    The two lines of code below picks two people at random to be the
+#       points of comparison for the x and y axes. To pick two different
+#       random people, change the number in the `set.seed()` function.
+#     Alternately, you can set two known people. To do so, uncomment the line
+#       marked `***` below and change the numbers inside the ()s to select
+#       two people. Note that the two people form (x axis, y axis) in that order.
+#set.seed(1245)
+defaults <- sample(1:nrow(all_data), 2)
+#defaults <- c(2, 3)    # ***
+
+for (i in 2:(length(all_datax)-1)){
+    if (is.numeric(all_datax[[i]])){
+      all_datax[[i]] <- get_numeric(all_datax[[i]], defaults[1])
+    } else {
+      all_datax[[i]] <- as.numeric(all_datax[[i]] == all_datax[[i]][[defaults[1]]])
+    }
+}
+
+for (i in 2:(length(all_datay)-1)){
+    if (is.numeric(all_datax[[i]] & i !=9)){
+      all_datay[[i]] <- get_numeric(all_datay[[i]], defaults[2])
+    } else {
+      all_datay[[i]] <- as.numeric(all_datay[[i]] == all_datay[[i]][[defaults[2]]])
+    }
+}
+
+dist_from_mean <- function(data){
+  data[is.na(data)] <- 0
+  for (i in 2:length(data)-1){
+    if (is.numeric(data[[i]])) {
+      min <- min(data[[i]], na.rm = TRUE)
+      max <- max(data[[i]], na.rm = TRUE)
+      range <- max-min
+      if (range == 0){
+        range <- 1
+      }
+      mean <- mean(data[[i]])
+      data[[i]] <- (data[[i]] - mean)/range
+    } else {
+      top <- data %>%
+        group_by_at(i) %>%
+        summarize(n = n()) %>%
+        top_n(1)
+      data[[i]] <- as.numeric(data[[i]] == top[[1]][1])
+    }
+  }
+  data
+}
+
+#all_datax <- dist_from_mean(all_data)
+#all_datay <- dist_from_mean(all_data)
+
+
+all_datax$distance <- rowSums(all_datax[2:(length(all_datax)-1)], na.rm=TRUE) * (1/length(2:(length(all_datax)-1)))
+all_datay$distance <- rowSums(all_datay[2:(length(all_datay)-1)], na.rm=TRUE) * (1/length(2:(length(all_datay)-1)))
+
+all <- data.frame(X = all_datax$distance, Y = all_datay$distance, clusterNum = all_datax$clusterNum)
+ggplot(all, aes(x = X, y = Y, color=clusterNum)) + geom_point(position = "jitter")
+```
+
+```{r graphClusters2}
+all_data %>%
+  mutate(prior_cat = ifelse(str_detect(c_charge_degree, "F"),
+                            "Felony",
+                            ifelse(str_detect(c_charge_degree, "M"),
+                            "Misdemeanor",
+                            "Other"))) %>%
+  ggplot(aes(x = age, y = priors_count, color = clusterNum)) +
+    geom_point(position = "jitter") +
+  labs(color = "Cluster") +
+    facet_grid(race~sex)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
