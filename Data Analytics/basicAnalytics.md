@@ -274,14 +274,19 @@ Cameron Kline-Sharpe
 +                              FPR(filter(simple_COMPAS, race == "Caucasian")),
 +                              FPR(filter(simple_COMPAS, race == "African-American")))
 > 
-> Fair_by_race <- get_fairness(Fair_by_race, "DT",
-+              FPR(filter(DT, race == "Caucasian")),
-+              FPR(filter(DT, race == "African-American")))
+> 
+> Fair_by_race <- get_fairness(Fair_by_race, "Foolish",
++                               0.2871621,
++                               0.453757)
 > 
 > Fair_by_race <- get_fairness(Fair_by_race, "ANN",
 +                              FPR(filter(ANN, Caucasian == 1)),
 +                              FPR(filter(ANN, `African-American` == 1)))
 > 
+> 
+> Fair_by_race <- get_fairness(Fair_by_race, "DT",
++              FPR(filter(DT, race == "Caucasian")),
++              FPR(filter(DT, race == "African-American")))
 > 
 > plot_fairness(Fair_by_race)
 ```
@@ -291,6 +296,7 @@ Cameron Kline-Sharpe
 ``` r
 > 
 > Fair_by_race %>%
++   filter(Model != "Random") %>%
 +   spread(Race, FPR) %>%
 +   mutate(FPR_Difference = Black - White) %>%
 +   ggplot(aes(x = Model, y = FPR_Difference)) +
@@ -298,24 +304,45 @@ Cameron Kline-Sharpe
 +              position="dodge", fill = red) +
 +     geom_text(aes(label = round(FPR_Difference, 3),
 +                   y = FPR_Difference + 0.008),
-+               size = 6)
++               size = 6) +
++     labs(y = "Difference in False Positive Rate")
 ```
 
 ![](basicAnalytics_files/figure-gfm/fairness-3.png)<!-- -->
 
 ``` r
+> get_sex_fairness <- function(old, model, maleFPR, femaleFPR){
++   new <- list(Model = model, Male = maleFPR, Female = femaleFPR) %>%
++     as.data.frame() %>%
++     gather(Male, Female, key=Sex, value = FPR)
++   data <- rbind(old, new)
++ }
 > 
 > Sex_fair <- list(Model = c("Random", "Random"),
-+              Race = c("White", "Black"),
++              Sex = c("Male", "Female"),
 +              FPR = c(0.5, 0.5)) %>%
 +   as.data.frame() %>%
 +   as.tbl()
 > 
-> Sex_fair <-  get_fairness(Sex_fair, "ANN",
+> Sex_fair <-  get_sex_fairness(Sex_fair, "COMPAS",
++              FPR(filter(simple_COMPAS, sex == "Male")),
++              FPR(filter(simple_COMPAS, sex == "Female")))
+> 
+> Sex_fair <-  get_sex_fairness(Sex_fair, "DT",
++              FPR(filter(DT, sex == "Male")),
++              FPR(filter(DT, sex == "Female")))
+> 
+> Sex_fair <-  get_sex_fairness(Sex_fair, "ANN",
 +              FPR(filter(ANN, Male == 1)),
 +              FPR(filter(ANN, Female == 1)))
 > 
+> ggplot(Sex_fair, aes(x=Model, y=FPR, fill = Sex)) +
++     geom_bar(stat = "identity", color = "black", position="dodge") +
++     scale_fill_manual(values = c(blue, green)) +
++     ylim(0,1)
 ```
+
+![](basicAnalytics_files/figure-gfm/sexFair-1.png)<!-- -->
 
 ``` r
 > 

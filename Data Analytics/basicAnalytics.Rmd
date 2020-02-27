@@ -41,7 +41,7 @@ COMPAS <- read_csv("../CleanedFeaturesData.csv",
 # much of the data in CleanedFeaturesData.csv is not needed, so for the sake of speed
 #    we use fewer features of the data
 simple_COMPAS <- COMPAS %>% 
-  select(person_id, age, race, decile_score, is_recid, is_violent_recid) %>% # get only these columns
+  select(person_id, age, sex, race, decile_score, is_recid, is_violent_recid) %>% # get only these columns
   mutate(recidDist = ifelse(is_recid, 10-decile_score, decile_score-1),
          predict5 = ifelse(decile_score > 5, TRUE, FALSE)) %>%  # add a prediction column that predicts recidivism if the score exceeds 5
   filter(recidDist >= 0) %>% # remove all people who have an impossible distance
@@ -516,18 +516,24 @@ Fair_by_race <- get_fairness(Fair_by_race, "COMPAS",
                              FPR(filter(simple_COMPAS, race == "Caucasian")),
                              FPR(filter(simple_COMPAS, race == "African-American")))
 
-Fair_by_race <- get_fairness(Fair_by_race, "DT",
-             FPR(filter(DT, race == "Caucasian")),
-             FPR(filter(DT, race == "African-American")))
+
+Fair_by_race <- get_fairness(Fair_by_race, "Foolish",
+                              0.2871621,
+                              0.453757)
 
 Fair_by_race <- get_fairness(Fair_by_race, "ANN",
                              FPR(filter(ANN, Caucasian == 1)),
                              FPR(filter(ANN, `African-American` == 1)))
 
 
+Fair_by_race <- get_fairness(Fair_by_race, "DT",
+             FPR(filter(DT, race == "Caucasian")),
+             FPR(filter(DT, race == "African-American")))
+
 plot_fairness(Fair_by_race)
 
 Fair_by_race %>%
+  filter(Model != "Random") %>%
   spread(Race, FPR) %>%
   mutate(FPR_Difference = Black - White) %>%
   ggplot(aes(x = Model, y = FPR_Difference)) +
@@ -535,19 +541,42 @@ Fair_by_race %>%
              position="dodge", fill = red) +
     geom_text(aes(label = round(FPR_Difference, 3),
                   y = FPR_Difference + 0.008),
-              size = 6)
+              size = 6) +
+    labs(y = "Difference in False Positive Rate")
+
+```
+
+
+```{r sexFair}
+get_sex_fairness <- function(old, model, maleFPR, femaleFPR){
+  new <- list(Model = model, Male = maleFPR, Female = femaleFPR) %>%
+    as.data.frame() %>%
+    gather(Male, Female, key=Sex, value = FPR)
+  data <- rbind(old, new)
+}
 
 Sex_fair <- list(Model = c("Random", "Random"),
-             Race = c("White", "Black"),
+             Sex = c("Male", "Female"),
              FPR = c(0.5, 0.5)) %>%
   as.data.frame() %>%
   as.tbl()
 
-Sex_fair <-  get_fairness(Sex_fair, "ANN",
+Sex_fair <-  get_sex_fairness(Sex_fair, "COMPAS",
+             FPR(filter(simple_COMPAS, sex == "Male")),
+             FPR(filter(simple_COMPAS, sex == "Female")))
+
+Sex_fair <-  get_sex_fairness(Sex_fair, "DT",
+             FPR(filter(DT, sex == "Male")),
+             FPR(filter(DT, sex == "Female")))
+
+Sex_fair <-  get_sex_fairness(Sex_fair, "ANN",
              FPR(filter(ANN, Male == 1)),
              FPR(filter(ANN, Female == 1)))
 
-
+ggplot(Sex_fair, aes(x=Model, y=FPR, fill = Sex)) +
+    geom_bar(stat = "identity", color = "black", position="dodge") +
+    scale_fill_manual(values = c(blue, green)) +
+    ylim(0,1)
 ```
 
 ```{r boots, eval=FALSE}
