@@ -4,7 +4,7 @@ author: "Cameron Kline-Sharpe"
 output: github_document
 ---
 
-```{r setup, include=FALSE}
+```{r options, include=FALSE}
 knitr::opts_chunk$set(collapse=TRUE, prompt=TRUE,comment=NULL,message=FALSE, include=TRUE, fig.height = 5, fig.width = 9)
 ```
 
@@ -86,9 +86,10 @@ foolish_violent <- read_csv("foolishConditionResults.csv",
              truthChar = ifelse(truth, "Did Recidivate", "Did Not Recidivate"))
 
 ANN <- read_csv("ANNPred.csv",
-                     col_type = cols(predicted = col_logical(), truth = col_logical())) %>%
-      mutate(correct = ifelse(predicted == truth, "Correct", "Incorrect"),
+                     col_type = cols(prediction = col_logical(), truth = col_logical())) %>%
+      mutate(correct = ifelse(prediction == truth, "Correct", "Incorrect"),
              truthChar = ifelse(truth, "Did Recidivate", "Did Not Recidivate"))
+
 
 green <- "#5BB84C"
 green2 <- "#4CB88F"
@@ -104,7 +105,8 @@ simple_COMPAS <- simple_COMPAS %>%
   mutate(pred5Status = ifelse(predict5, 
                               ifelse(is_recid, "True Positive", "False Positive"), 
                               ifelse(is_recid, "False Negative", "True Negative"))) %>% # get the TP, NP, etc.
-  mutate(recidStatus = ifelse(is_recid, ifelse(is_violent_recid, "Violently Recidivated", "Did Recidivate"), "Did Not Recidivate")) 
+  mutate(recidStatus = ifelse(is_recid, ifelse(is_violent_recid, "Violently Recidivated", "Did Recidivate"), "Did Not Recidivate")) %>%
+  mutate(race3 = ifelse(race %in% c("Asian", "Hispanic", "Native American", "Asian"), "Other", race))
 
 # TODO: try pie chart (maybe just of those who recidivism)
 ggplot(simple_COMPAS, aes(x = recidStatus, fill=recidStatus)) + 
@@ -127,6 +129,42 @@ ggplot(simple_COMPAS, aes(x = recidDist, fill=recidStatus)) + geom_bar() +
   facet_wrap(~recidStatus) + 
   labs(title="COMPAS Score Distances by Recidivism", x = "Score Distance", fill = "Recidivism") + 
   scale_fill_manual(values = c(green, blue, red))
+
+simple_COMPAS %>%
+  ggplot(aes(x = recidDist, fill=recidStatus)) + geom_bar() +
+    facet_wrap(~race3) + 
+    labs(title="COMPAS Score Distances by Race", x = "Score Distance", fill = "Recidivism") + 
+    scale_fill_manual(values = c(green, blue, red))
+
+simple_COMPAS %>%
+  ggplot(aes(x = decile_score, fill=recidStatus)) + geom_bar() +
+    facet_wrap(~race3) + 
+    labs(title="COMPAS Scores by Race", x = "Score Distance", fill = "Recidivism") + 
+    scale_fill_manual(values = c(green, blue, red))
+
+simple_COMPAS %>%
+  filter(race == "African-American") %>%
+  ggplot(aes(x = decile_score, fill=recidStatus)) + geom_bar() +
+    labs(title="COMPAS Scores for African Americans", x = "Score Distance", fill = "Recidivism") + 
+    scale_fill_manual(values = c(green, blue, red))
+
+simple_COMPAS %>%
+  filter(race == "Caucasian") %>%
+  ggplot(aes(x = decile_score, fill=recidStatus)) + geom_bar() +
+    labs(title="COMPAS Scores for Caucasians", x = "Score Distance", fill = "Recidivism") + 
+    scale_fill_manual(values = c(green, blue, red))
+
+simple_COMPAS %>%
+  filter(race == "Hispanic") %>%
+  ggplot(aes(x = decile_score, fill=recidStatus)) + geom_bar() +
+    labs(title="COMPAS Scores for Hispanic People", x = "Score Distance", fill = "Recidivism") + 
+    scale_fill_manual(values = c(green, blue, red))
+
+simple_COMPAS %>%
+  filter(race %in% c("Other", "Asian", "Native American")) %>%
+  ggplot(aes(x = decile_score, fill=recidStatus)) + geom_bar() +
+    labs(title="COMPAS Scores for Other Racial Groups", x = "Score Distance", fill = "Recidivism") + 
+    scale_fill_manual(values = c(green, blue, red))
 
 # TODO: check that these are good colors
 ggplot(simple_COMPAS, aes(x = pred5Status, fill=pred5Status)) +
@@ -212,7 +250,12 @@ ggplot(simple_COMPAS, aes(x=age, y=recidDist, color=recidStatus)) +
 ```
 
 
-```{r baseline, echo=FALSE}
+```{r setup, echo=FALSE}
+
+simple_COMPAS <- simple_COMPAS %>%
+  mutate(recid = ifelse(is_recid, "Did Recidivate", "Did Not Recidivate"),
+         correct = ifelse(predict5 == is_recid, "Correct", "Incorrect"),
+         truth = is_recid)
 
 # scale things to 1.0
 
@@ -226,17 +269,6 @@ vnames <- c("Random")
 vaccs <- c(0.5)
 vTPRs <- c(0.5)
 vTNRs <- c(0.5)
-
-
-
-simple_COMPAS %>%
-  mutate(recid = ifelse(is_recid, "Did Recidivate", "Did Not Recidivate"),
-         predict5Corr = ifelse(predict5 == is_recid, "Correct", "Incorrect")) %>%
-  ggplot( aes(x=recid, fill=predict5Corr)) + 
-    geom_bar() + 
-    scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
-    labs(title="COMPAS Confusion Matrix", fill="COMPAS Prediction")
-
 
 accuracy <- function(data){
   nrow(filter(data, correct == "Correct"))/nrow(data)
@@ -254,6 +286,16 @@ FPR <- function(data){
   nrow(filter(data, truth == 0, correct == "Incorrect"))/nrow(filter(data, truth == 0))
 }
 
+
+con_mat <- function(data){
+  data %>%
+    group_by(truthChar) %>%
+    mutate(num = n()) %>%
+    group_by(truthChar, correct, num) %>%
+    summarize(n = n()) %>%
+    mutate(prop = round(n/num,3))
+}
+
 get_fairness <- function(old, model, whiteFPR, blackFPR){
   new <- list(Model = model, White = whiteFPR, Black = blackFPR) %>%
     as.data.frame() %>%
@@ -265,18 +307,10 @@ get_fairness <- function(old, model, whiteFPR, blackFPR){
 plot_fairness <- function(data){
   ggplot(data, aes(x=Model, y=FPR, fill = Race)) +
     geom_bar(stat = "identity", color = "black", position="dodge") +
+    scale_fill_manual(values = c(blue, green)) +
     ylim(0,1)
 }
 
-
-con_mat <- function(data){
-  data %>%
-    group_by(truthChar) %>%
-    mutate(num = n()) %>%
-    group_by(truthChar, correct, num) %>%
-    summarize(n = n()) %>%
-    mutate(prop = round(n/num,3))
-}
 
 plot_metrics <- function(names, acc, TPR, FPR){
   met <- list(Model=names, acc=acc, TPR=TPR, FPR=FPR) %>%
@@ -299,7 +333,21 @@ plot_accs <- function(names, accs){
     ylim(0,1)
 }
 
+```
 
+
+```{r baseline}
+
+
+simple_COMPAS %>%
+  ggplot( aes(x=recid, fill=predict5Corr)) + 
+    geom_bar() + 
+    scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
+    labs(title="COMPAS Confusion Matrix", fill="COMPAS Prediction")
+
+names <- append(names, "COMPAS")
+accs <- append(accs, accuracy(simple_COMPAS))
+FPRs <- append(FPRs, FPR(simple_COMPAS))
 
 baseline %>%
   con_mat() %>%
@@ -324,9 +372,8 @@ baseline_violent %>%
     scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
     geom_text(aes(label = prop, y=n), size = 4, position = position_stack(vjust = 0.5))
 
-
 plot_accs(names, accs) + 
-  scale_fill_manual(values = c(green)) 
+  scale_fill_manual(values = c(green, blue)) 
 
 foolish %>%
   con_mat() %>%
@@ -343,7 +390,7 @@ names <- append(names, "Foolish")
 accs <- append(accs, accuracy(foolish))
 FPRs <- append(FPRs, FPR(foolish))
 plot_accs(names, accs) + 
-  scale_fill_manual(values = c(green, blue)) 
+  scale_fill_manual(values = c(green, blue, blue)) 
 
 
 foolish_violent %>%
@@ -393,7 +440,7 @@ names <- append(names, "NB")
 accs <- append(accs, accuracy(NB))
 FPRs <- append(FPRs, FPR(NB))
 plot_accs(names, accs) +
-  scale_fill_manual(values = c(blue, green, blue))
+  scale_fill_manual(values = c(green, blue, blue, blue))
 
 
 DT %>%
@@ -412,7 +459,7 @@ names <- append(names, "DT")
 accs <- append(accs, accuracy(DT))
 FPRs <- append(FPRs, FPR(DT))
 plot_accs(names, accs) +
-  scale_fill_manual(values = c(green, blue, blue, blue))
+  scale_fill_manual(values = c(blue,green, blue, blue, blue))
 
 
 DT_Violent %>%
@@ -448,19 +495,60 @@ names <- append(names, "ANN")
 accs <- append(accs, accuracy(ANN))
 FPRs <- append(FPRs, FPR(ANN))
 plot_accs(names, accs) + 
-  scale_fill_manual(values = c(green, blue, blue, blue, blue))
+  scale_fill_manual(values = c(green, blue, blue, blue, blue, blue))
+
+  
+```
+```{r fairness}
+
 
 plot_accs(names, FPRs) +
   labs(x = "False Positive Rate")
 
-Fairnesses <- list(Model = c("Random", "Random"),
+Fair_by_race <- list(Model = c("Random", "Random"),
              Race = c("White", "Black"),
              FPR = c(0.5, 0.5)) %>%
   as.data.frame() %>%
   as.tbl()
-  
-```
 
+
+Fair_by_race <- get_fairness(Fair_by_race, "COMPAS",
+                             FPR(filter(simple_COMPAS, race == "Caucasian")),
+                             FPR(filter(simple_COMPAS, race == "African-American")))
+
+Fair_by_race <- get_fairness(Fair_by_race, "DT",
+             FPR(filter(DT, race == "Caucasian")),
+             FPR(filter(DT, race == "African-American")))
+
+Fair_by_race <- get_fairness(Fair_by_race, "ANN",
+                             FPR(filter(ANN, Caucasian == 1)),
+                             FPR(filter(ANN, `African-American` == 1)))
+
+
+plot_fairness(Fair_by_race)
+
+Fair_by_race %>%
+  spread(Race, FPR) %>%
+  mutate(FPR_Difference = Black - White) %>%
+  ggplot(aes(x = Model, y = FPR_Difference)) +
+    geom_bar(stat = "identity", color = "black",
+             position="dodge", fill = red) +
+    geom_text(aes(label = round(FPR_Difference, 3),
+                  y = FPR_Difference + 0.008),
+              size = 6)
+
+Sex_fair <- list(Model = c("Random", "Random"),
+             Race = c("White", "Black"),
+             FPR = c(0.5, 0.5)) %>%
+  as.data.frame() %>%
+  as.tbl()
+
+Sex_fair <-  get_fairness(Sex_fair, "ANN",
+             FPR(filter(ANN, Male == 1)),
+             FPR(filter(ANN, Female == 1)))
+
+
+```
 
 ```{r boots, eval=FALSE}
 

@@ -12,7 +12,7 @@ Cameron Kline-Sharpe
 3.  Colors often backwards–pick consistant colors; note also to provide
     colors with correct conotations (red==bad, blue==not)
 
-![](basicAnalytics_files/figure-gfm/compasError-1.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-2.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-3.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-4.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-5.png)<!-- -->
+![](basicAnalytics_files/figure-gfm/compasError-1.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-2.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-3.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-4.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-5.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-6.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-7.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-8.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-9.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-10.png)<!-- -->![](basicAnalytics_files/figure-gfm/compasError-11.png)<!-- -->
 
 ### CONFUSION MATRIX
 
@@ -25,7 +25,297 @@ Cameron Kline-Sharpe
 
 ![](basicAnalytics_files/figure-gfm/age-1.png)<!-- -->![](basicAnalytics_files/figure-gfm/age-2.png)<!-- -->![](basicAnalytics_files/figure-gfm/age-3.png)<!-- -->![](basicAnalytics_files/figure-gfm/age-4.png)<!-- -->
 
-![](basicAnalytics_files/figure-gfm/Algos-1.png)<!-- -->![](basicAnalytics_files/figure-gfm/Algos-2.png)<!-- -->![](basicAnalytics_files/figure-gfm/Algos-3.png)<!-- -->![](basicAnalytics_files/figure-gfm/Algos-4.png)<!-- -->![](basicAnalytics_files/figure-gfm/Algos-5.png)<!-- -->![](basicAnalytics_files/figure-gfm/Algos-6.png)<!-- -->![](basicAnalytics_files/figure-gfm/Algos-7.png)<!-- -->![](basicAnalytics_files/figure-gfm/Algos-8.png)<!-- -->![](basicAnalytics_files/figure-gfm/Algos-9.png)<!-- -->![](basicAnalytics_files/figure-gfm/Algos-10.png)<!-- -->![](basicAnalytics_files/figure-gfm/Algos-11.png)<!-- -->![](basicAnalytics_files/figure-gfm/Algos-12.png)<!-- -->![](basicAnalytics_files/figure-gfm/Algos-13.png)<!-- -->
+``` r
+> 
+> 
+> simple_COMPAS %>%
++   ggplot( aes(x=recid, fill=predict5Corr)) + 
++     geom_bar() + 
++     scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
++     labs(title="COMPAS Confusion Matrix", fill="COMPAS Prediction")
+```
+
+![](basicAnalytics_files/figure-gfm/baseline-1.png)<!-- -->
+
+``` r
+> 
+> names <- append(names, "COMPAS")
+> accs <- append(accs, accuracy(simple_COMPAS))
+> FPRs <- append(FPRs, FPR(simple_COMPAS))
+> 
+> baseline %>%
++   con_mat() %>%
++   ggplot(aes(x = truthChar, y=n, fill=correct)) + 
++     geom_bar(stat="identity") +
++     labs(title = "Random Baseline for Recidivism",
++          fill="Prediction",
++          x = "Ground Truth",
++          y = "Count") + 
++     scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
++     geom_text(aes(label = prop, y=n), size = 6, position = position_stack(vjust = 0.5))
+```
+
+![](basicAnalytics_files/figure-gfm/baseline-2.png)<!-- -->
+
+``` r
+> 
+>               
+> baseline_violent %>%
++   con_mat() %>%
++   ggplot(aes(x = truthChar, y=n, fill=correct)) + 
++     geom_bar(stat="identity") +
++     labs(title = "Random Baseline for Violent Recidivism",
++          fill="Prediction",
++          x = "Ground Truth",
++          y = "Count") + 
++     scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
++     geom_text(aes(label = prop, y=n), size = 4, position = position_stack(vjust = 0.5))
+```
+
+![](basicAnalytics_files/figure-gfm/baseline-3.png)<!-- -->
+
+``` r
+> 
+> plot_accs(names, accs) + 
++   scale_fill_manual(values = c(green, blue)) 
+```
+
+![](basicAnalytics_files/figure-gfm/baseline-4.png)<!-- -->
+
+``` r
+> 
+> foolish %>%
++   con_mat() %>%
++   ggplot(aes(x = truthChar, y=n, fill=correct)) + 
++     geom_bar(stat="identity") +
++     labs(title = "Foolish Prediction for Recidivism",
++          fill="Prediction",
++          x = "Ground Truth",
++          y = "Count") + 
++     scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
++     geom_text(aes(label = prop, y=n), size = 6, position = position_stack(vjust = 0.5))
+```
+
+![](basicAnalytics_files/figure-gfm/baseline-5.png)<!-- -->
+
+``` r
+> 
+> names <- append(names, "Foolish")
+> accs <- append(accs, accuracy(foolish))
+> FPRs <- append(FPRs, FPR(foolish))
+> plot_accs(names, accs) + 
++   scale_fill_manual(values = c(green, blue, blue)) 
+```
+
+![](basicAnalytics_files/figure-gfm/baseline-6.png)<!-- -->
+
+``` r
+> 
+> 
+> foolish_violent %>%
++   con_mat() %>%
++   ggplot(aes(x = truthChar, y=n, fill=correct)) + 
++     geom_bar(stat="identity") +
++    
++     labs(title = "Foolish Prediction for Violent Recidivism",
++          fill="Prediction",
++          x = "Ground Truth",
++          y = "Count") + 
++     scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
++     geom_text(aes(label = prop, y=n), size = 4, position = position_stack(vjust = 0.5))
+```
+
+![](basicAnalytics_files/figure-gfm/baseline-7.png)<!-- -->
+
+``` r
+> 
+> vnames <- append(vnames, "Foolish")
+> vaccs <- append(vaccs, accuracy(foolish_violent))
+> vTPRs <- append(vTPRs, TPR(foolish_violent))
+> vTNRs <- append(vTNRs, TNR(foolish_violent))
+> 
+> 
+```
+
+``` r
+> 
+> NB <- simple_COMPAS %>%
++   mutate(truth = is_recid) %>%
++   select(truth) %>%
++   mutate(NB = "Did Not Recidivate",
++          truthChar= ifelse(truth == 1, "Did Recidivate", "Did Not Recidivate"),
++          correct = ifelse(truthChar == NB, "Correct", "Incorrect"))
+> 
+> NB %>%
++   con_mat() %>%
++   ggplot(aes(x = truthChar, y=n, fill=correct)) + 
++     geom_bar(stat="identity") +
++     labs(title = "Naive Bayes Prediction for Recidivism",
++          fill="Prediction",
++          x = "Ground Truth",
++          y = "Count") + 
++     scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
++     geom_text(aes(label = prop, y=ifelse(n < 500, 500, n)),
++               size = 6, position = position_stack(vjust = 0.5))
+```
+
+![](basicAnalytics_files/figure-gfm/algorithms-1.png)<!-- -->
+
+``` r
+> 
+> names <- append(names, "NB")
+> accs <- append(accs, accuracy(NB))
+> FPRs <- append(FPRs, FPR(NB))
+> plot_accs(names, accs) +
++   scale_fill_manual(values = c(green, blue, blue, blue))
+```
+
+![](basicAnalytics_files/figure-gfm/algorithms-2.png)<!-- -->
+
+``` r
+> 
+> 
+> DT %>%
++   con_mat() %>%
++   ggplot(aes(x = truthChar, y=n, fill=correct)) + 
++     geom_bar(stat="identity") +
++     labs(title = "Decision Tree Prediction for Recidivism",
++          fill="Prediction",
++          x = "Ground Truth",
++          y = "Count") + 
++     scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
++     geom_text(aes(label = prop, y=ifelse(n < 500, 500, n)),
++               size = 6, position = position_stack(vjust = 0.5))
+```
+
+![](basicAnalytics_files/figure-gfm/algorithms-3.png)<!-- -->
+
+``` r
+> 
+> names <- append(names, "DT")
+> accs <- append(accs, accuracy(DT))
+> FPRs <- append(FPRs, FPR(DT))
+> plot_accs(names, accs) +
++   scale_fill_manual(values = c(blue,green, blue, blue, blue))
+```
+
+![](basicAnalytics_files/figure-gfm/algorithms-4.png)<!-- -->
+
+``` r
+> 
+> 
+> DT_Violent %>%
++   con_mat() %>%
++   ggplot(aes(x = truthChar, y=n, fill=correct)) + 
++     geom_bar(stat="identity") +
++     labs(title = "Decision Prediction for Violent Recidivism",
++          fill="Prediction",
++          x = "Ground Truth",
++          y = "Count") + 
++     scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
++     geom_text(aes(label = prop, y=ifelse(n < 500, 500, n)),
++               size = 6, position = position_stack(vjust = 0.5))
+```
+
+![](basicAnalytics_files/figure-gfm/algorithms-5.png)<!-- -->
+
+``` r
+> 
+> vnames <- append(vnames, "DT")
+> vaccs <- append(vaccs, accuracy(DT_Violent))
+> vTPRs <- append(vTPRs, TPR(DT_Violent))
+> vTNRs <- append(vTNRs, TNR(DT_Violent))
+> 
+> ANN %>%
++   con_mat() %>%
++   ggplot(aes(x = truthChar, y=n, fill=correct)) + 
++     geom_bar(stat="identity") +
++     labs(title = "ANN Prediction for Recidivism",
++          fill="Prediction",
++          x = "Ground Truth",
++          y = "Count") + 
++     scale_fill_manual(values = c("#1FBFC3", "#F57670")) + 
++     geom_text(aes(label = prop, y=ifelse(n < 500, 500, n)),
++               size = 6, position = position_stack(vjust = 0.5))
+```
+
+![](basicAnalytics_files/figure-gfm/algorithms-6.png)<!-- -->
+
+``` r
+> 
+> names <- append(names, "ANN")
+> accs <- append(accs, accuracy(ANN))
+> FPRs <- append(FPRs, FPR(ANN))
+> plot_accs(names, accs) + 
++   scale_fill_manual(values = c(green, blue, blue, blue, blue, blue))
+```
+
+![](basicAnalytics_files/figure-gfm/algorithms-7.png)<!-- -->
+
+``` r
+> 
+> 
+> plot_accs(names, FPRs) +
++   labs(x = "False Positive Rate")
+```
+
+![](basicAnalytics_files/figure-gfm/fairness-1.png)<!-- -->
+
+``` r
+> 
+> Fair_by_race <- list(Model = c("Random", "Random"),
++              Race = c("White", "Black"),
++              FPR = c(0.5, 0.5)) %>%
++   as.data.frame() %>%
++   as.tbl()
+> 
+> 
+> Fair_by_race <- get_fairness(Fair_by_race, "COMPAS",
++                              FPR(filter(simple_COMPAS, race == "Caucasian")),
++                              FPR(filter(simple_COMPAS, race == "African-American")))
+> 
+> Fair_by_race <- get_fairness(Fair_by_race, "DT",
++              FPR(filter(DT, race == "Caucasian")),
++              FPR(filter(DT, race == "African-American")))
+> 
+> Fair_by_race <- get_fairness(Fair_by_race, "ANN",
++                              FPR(filter(ANN, Caucasian == 1)),
++                              FPR(filter(ANN, `African-American` == 1)))
+> 
+> 
+> plot_fairness(Fair_by_race)
+```
+
+![](basicAnalytics_files/figure-gfm/fairness-2.png)<!-- -->
+
+``` r
+> 
+> Fair_by_race %>%
++   spread(Race, FPR) %>%
++   mutate(FPR_Difference = Black - White) %>%
++   ggplot(aes(x = Model, y = FPR_Difference)) +
++     geom_bar(stat = "identity", color = "black",
++              position="dodge", fill = red) +
++     geom_text(aes(label = round(FPR_Difference, 3),
++                   y = FPR_Difference + 0.008),
++               size = 6)
+```
+
+![](basicAnalytics_files/figure-gfm/fairness-3.png)<!-- -->
+
+``` r
+> 
+> Sex_fair <- list(Model = c("Random", "Random"),
++              Race = c("White", "Black"),
++              FPR = c(0.5, 0.5)) %>%
++   as.data.frame() %>%
++   as.tbl()
+> 
+> Sex_fair <-  get_fairness(Sex_fair, "ANN",
++              FPR(filter(ANN, Male == 1)),
++              FPR(filter(ANN, Female == 1)))
+> 
+```
 
 ``` r
 > 
